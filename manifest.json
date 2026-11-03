@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Caelestia-DNT",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Dynamic Material You new tab synchronized with Noctalia (Niri) and Caelestia (Hyprland) on Linux",
   "permissions": [
     "windows",
@@ -14,7 +14,19 @@
     "*://*.youtube.com/*",
     "*://*.github.com/*",
     "*://*.reddit.com/*",
-    "*://*.wikipedia.org/*"
+    "*://*.wikipedia.org/*",
+    "*://www.google.com/*",
+    "*://google.com/*",
+    "*://www.google.co.uk/*",
+    "*://www.google.ca/*",
+    "*://www.google.com.au/*",
+    "*://www.google.de/*",
+    "*://www.google.fr/*",
+    "*://www.google.co.in/*",
+    "*://www.google.co.jp/*",
+    "*://www.google.com.br/*",
+    "*://www.google.com.gh/*",
+    "*://web.whatsapp.com/*"
   ],
   "chrome_url_overrides": {
     "newtab": "newtab.html"
@@ -32,7 +44,19 @@
         "*://*.youtube.com/*",
         "*://*.github.com/*",
         "*://*.reddit.com/*",
-        "*://*.wikipedia.org/*"
+        "*://*.wikipedia.org/*",
+        "*://www.google.com/*",
+        "*://google.com/*",
+        "*://www.google.co.uk/*",
+        "*://www.google.ca/*",
+        "*://www.google.com.au/*",
+        "*://www.google.de/*",
+        "*://www.google.fr/*",
+        "*://www.google.co.in/*",
+        "*://www.google.co.jp/*",
+        "*://www.google.com.br/*",
+        "*://www.google.com.gh/*",
+        "*://web.whatsapp.com/*"
       ],
       "js": [
         "content.js"

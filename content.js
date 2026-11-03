@@ -1,14 +1,49 @@
 // Caelestia Material You declarative CSS injector
-// Targets YouTube, GitHub, Reddit, and Wikipedia with WCAG AAA readability in both light & dark modes (0% CPU overhead)
+// Targets YouTube, GitHub, Reddit, Wikipedia, Google Search, and WhatsApp Web,
+// with a universal fallback for future adapters.
 
 (() => {
   'use strict';
 
   const STYLE_ID = 'caelestia-dynamic-site-theme';
+  let currentTheme = null;
+  let sitesEnabled = {};
+
+  function removeInjectedStyle() {
+    const existing = document.getElementById(STYLE_ID);
+    if (existing) existing.remove();
+  }
 
   function getHex(val) {
     if (!val) return '';
     return val.startsWith('#') ? val : `#${val}`;
+  }
+
+  // WhatsApp's design tokens expose some values as "r, g, b" strings.
+  function hexToRgbCsv(val) {
+    const clean = getHex(val).replace('#', '');
+    const full = clean.length === 3
+      ? clean.split('').map((c) => c + c).join('')
+      : clean;
+    if (!/^[0-9a-f]{6}$/i.test(full)) return '0, 0, 0';
+    const num = parseInt(full, 16);
+    return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
+  }
+
+  function isGoogleHost(hostname) {
+    return hostname === 'google.com'
+      || hostname.startsWith('www.google.')
+      || /^www\.google\.[a-z]{2,}(\.[a-z]{2,})?$/.test(hostname);
+  }
+
+  function getSiteId(hostname) {
+    if (hostname.endsWith('youtube.com')) return 'youtube';
+    if (hostname.endsWith('github.com')) return 'github';
+    if (hostname.endsWith('reddit.com')) return 'reddit';
+    if (hostname.endsWith('wikipedia.org')) return 'wikipedia';
+    if (hostname === 'web.whatsapp.com') return 'whatsapp';
+    if (isGoogleHost(hostname)) return 'google';
+    return null;
   }
 
   // Purely dynamic token resolution - all colors derived directly from wallpaper scheme
@@ -594,6 +629,271 @@
     `;
   }
 
+  function buildGoogleCSS(colors, isDark) {
+    const t = resolveThemeTokens(colors, isDark);
+    const bg = t.bg;
+    const surfaceLow = t.surfaceLow;
+    const surfaceMid = t.surfaceMid;
+    const surfaceHigh = t.surfaceHigh;
+    const onSurface = t.onSurface;
+    const onSurfaceVar = t.onSurfaceVar;
+    const outline = t.outline;
+    const primary = t.primary;
+    const onPrimary = t.onPrimary;
+    const primContainer = t.primContainer;
+    const onPrimContainer = t.onPrimContainer;
+
+    return `
+      /* --- Google Search Caelestia Dynamic Styling --- */
+      html, body {
+        background-color: ${bg} !important;
+        color: ${onSurface} !important;
+        color-scheme: ${isDark ? 'dark' : 'light'} !important;
+        accent-color: ${primary} !important;
+      }
+
+      #main, #rcnt, #center_col, #search, #rso, #taw, #bottomads,
+      #hdtb, #gb, #appbar, #top_nav, #before-appbar, .srp {
+        background-color: ${bg} !important;
+        color: ${onSurface} !important;
+        border-color: ${outline} !important;
+      }
+
+      #gb, #hdtb {
+        border-bottom: 1px solid ${outline} !important;
+      }
+
+      /* Search box: theme the inner pill, keep the form transparent. */
+      #tsf, form[role="search"], #searchform {
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+      .RNNXgb, .sbibod, .aajZCb {
+        background-color: ${surfaceMid} !important;
+        border: 1px solid ${outline} !important;
+        color: ${onSurface} !important;
+        box-shadow: none !important;
+      }
+      textarea.gLFyf, input[name="q"], .gLFyf {
+        background-color: transparent !important;
+        color: ${onSurface} !important;
+        caret-color: ${primary} !important;
+      }
+
+      /* Result titles, links, and visited links. */
+      #rso h3, #rso h3 a, #rso a:link, #rso a:visited,
+      #search a:link, #search a:visited,
+      #gb a:link, #gb a:visited {
+        color: ${primary} !important;
+      }
+
+      /* URLs, snippets, and secondary metadata. */
+      #rso cite, #rso .VwiC3b, #rso .kb0PBd, #rso .aCOpRe,
+      #rso .lEBKkf, #rso .MUxGbd, #rso .njrQkf {
+        color: ${onSurfaceVar} !important;
+      }
+
+      /* Filter tabs. */
+      #hdtb a, #hdtb span, #hdtb-more, #hdtb-tls {
+        color: ${onSurfaceVar} !important;
+      }
+      #hdtb a[aria-current="page"], #hdtb a[aria-selected="true"],
+      #hdtb .hdtb-mitem.hdtb-msel {
+        color: ${primary} !important;
+        border-color: ${primary} !important;
+      }
+
+      /* Primary buttons (including the Google account button). */
+      .gb_A, a.gb_A, #gb a.gb_A,
+      input[type="submit"], .Tg7LZd, .gNO89b {
+        background-color: ${primary} !important;
+        color: ${onPrimary} !important;
+        border-color: ${primary} !important;
+      }
+      #gb a.gb_A span, #gb a.gb_A * {
+        background-color: transparent !important;
+        color: ${onPrimary} !important;
+      }
+
+      /* Result cards, knowledge panels, AI panels, and dialogs. */
+      #rso .MjjYud {
+        border-bottom: 1px solid ${outline} !important;
+      }
+      #rso .ULSxyf, #rso .TBC9ub, #rso .kp-wholepage, #rso .liYKde,
+      #rso .mnr-c, [role="dialog"], .c14XSe, .TBC9ub {
+        background-color: ${surfaceLow} !important;
+        color: ${onSurface} !important;
+        border-color: ${outline} !important;
+      }
+
+      /* Inputs and secondary interaction surfaces. */
+      input, textarea, select {
+        color: ${onSurface} !important;
+        border-color: ${outline} !important;
+      }
+      a:hover, #rso h3 a:hover {
+        color: ${t.secondary} !important;
+      }
+      ::selection {
+        background-color: ${primContainer} !important;
+        color: ${onPrimContainer} !important;
+      }
+      * {
+        scrollbar-color: ${outline} ${surfaceLow} !important;
+      }
+    `;
+  }
+
+  function buildWhatsAppCSS(colors, isDark) {
+    const t = resolveThemeTokens(colors, isDark);
+    const bg = t.bg;
+    const surfaceLow = t.surfaceLow;
+    const surfaceMid = t.surfaceMid;
+    const surfaceHigh = t.surfaceHigh;
+    const surfaceHighest = t.surfaceHighest;
+    const onSurface = t.onSurface;
+    const onSurfaceVar = t.onSurfaceVar;
+    const outline = t.outline;
+    const primary = t.primary;
+    const onPrimary = t.onPrimary;
+    const primContainer = t.primContainer;
+    const onPrimContainer = t.onPrimContainer;
+    const secondary = t.secondary;
+    const green = t.green;
+    const yellow = t.yellow;
+    const error = t.error;
+    const blue = t.blue;
+
+    const rgb = hexToRgbCsv;
+    const dimmer = isDark ? 'rgba(0, 0, 0, 0.65)' : 'rgba(0, 0, 0, 0.45)';
+
+    return `
+      /* --- WhatsApp Web Caelestia Dynamic Styling --- */
+      :root:root, html, body, #app, #app *, .app-wrapper, .landing-page {
+        --WDS-surface-default: ${bg} !important;
+        --WDS-surface-default-RGB: ${rgb(bg)} !important;
+        --WDS-surface-elevated-default: ${surfaceMid} !important;
+        --WDS-surface-elevated-default-RGB: ${rgb(surfaceMid)} !important;
+        --WDS-surface-elevated-emphasized: ${surfaceHigh} !important;
+        --WDS-surface-emphasized: ${surfaceHigh} !important;
+        --WDS-surface-emphasized-RGB: ${rgb(surfaceHigh)} !important;
+        --WDS-surface-highlight: ${surfaceHigh} !important;
+        --WDS-surface-highlight-RGB: ${rgb(surfaceHigh)} !important;
+        --WDS-surface-pressed: ${surfaceHighest} !important;
+        --WDS-surface-inverse: ${onSurface} !important;
+
+        --WDS-content-default: ${onSurface} !important;
+        --WDS-content-default-RGB: ${rgb(onSurface)} !important;
+        --WDS-content-deemphasized: ${onSurfaceVar} !important;
+        --WDS-content-disabled: ${outline} !important;
+        --WDS-content-inverse: ${bg} !important;
+        --WDS-content-action-default: ${primary} !important;
+        --WDS-content-action-emphasized: ${primary} !important;
+        --WDS-content-external-link: ${primary} !important;
+        --WDS-content-on-accent: ${onPrimary} !important;
+        --WDS-content-on-accent-RGB: ${rgb(onPrimary)} !important;
+        --WDS-content-read: ${blue} !important;
+
+        --WDS-accent: ${primary} !important;
+        --WDS-accent-RGB: ${rgb(primary)} !important;
+        --WDS-accent-emphasized: ${primary} !important;
+        --WDS-accent-deemphasized: ${primContainer} !important;
+
+        --WDS-lines-divider: ${outline} !important;
+        --WDS-lines-outline-default: ${outline} !important;
+        --WDS-lines-outline-default-RGB: ${rgb(outline)} !important;
+        --WDS-lines-outline-deemphasized: ${outline} !important;
+
+        --WDS-background-wash-plain: ${bg} !important;
+        --WDS-background-wash-plain-RGB: ${rgb(bg)} !important;
+        --WDS-background-wash-inset: ${surfaceMid} !important;
+        --WDS-background-wash-inset-RGB: ${rgb(surfaceMid)} !important;
+        --WDS-background-elevated-wash-plain: ${surfaceMid} !important;
+        --WDS-background-elevated-wash-inset: ${surfaceHigh} !important;
+        --WDS-background-dimmer: ${dimmer} !important;
+        --WDS-app-wash: ${bg} !important;
+        --WDS-transient-background: ${bg} !important;
+
+        --WDS-secondary-positive: ${green} !important;
+        --WDS-secondary-positive-deemphasized: ${green} !important;
+        --WDS-secondary-positive-RGB: ${rgb(green)} !important;
+        --WDS-secondary-negative: ${error} !important;
+        --WDS-secondary-negative-deemphasized: ${error} !important;
+        --WDS-secondary-negative-emphasized: ${error} !important;
+        --WDS-secondary-negative-RGB: ${rgb(error)} !important;
+        --WDS-secondary-warning: ${yellow} !important;
+        --WDS-secondary-warning-deemphasized: ${yellow} !important;
+
+        --WDS-systems-bubble-surface-incoming: ${surfaceHigh} !important;
+        --WDS-systems-bubble-surface-incoming-RGB: ${rgb(surfaceHigh)} !important;
+        --WDS-systems-bubble-surface-outgoing: ${primContainer} !important;
+        --WDS-systems-bubble-surface-outgoing-RGB: ${rgb(primContainer)} !important;
+        --WDS-systems-bubble-surface-business: ${surfaceHigh} !important;
+        --WDS-systems-bubble-surface-e2e: ${surfaceHigh} !important;
+        --WDS-systems-bubble-surface-overlay: ${surfaceMid} !important;
+        --WDS-systems-bubble-surface-overlay-RGB: ${rgb(surfaceMid)} !important;
+        --WDS-systems-bubble-surface-system: ${surfaceMid} !important;
+        --WDS-systems-bubble-content-business: ${onSurface} !important;
+        --WDS-systems-bubble-content-deemphasized: ${onSurfaceVar} !important;
+        --WDS-systems-bubble-content-e2e: ${onSurfaceVar} !important;
+
+        --WDS-systems-chat-background-wallpaper: ${bg} !important;
+        --WDS-systems-chat-background-wallpaper-RGB: ${rgb(bg)} !important;
+        --WDS-systems-chat-foreground-wallpaper: ${onSurface} !important;
+        --WDS-systems-chat-surface-composer: ${surfaceMid} !important;
+        --WDS-systems-chat-surface-tray: ${surfaceLow} !important;
+        --WDS-systems-status-seen: ${blue} !important;
+
+        --WDS-components-active-list-row: ${primContainer} !important;
+        --WDS-components-badge-muted: ${secondary} !important;
+        --WDS-components-badge-muted-dot: ${secondary} !important;
+        --WDS-components-filter-surface-selected: ${primContainer} !important;
+        --WDS-components-outline-profile-photo: ${outline} !important;
+        --WDS-components-platform-gesture-bar: ${outline} !important;
+        --WDS-components-platform-status-bar: ${bg} !important;
+        --WDS-components-surface-nav-bar: ${surfaceMid} !important;
+
+        --WDS-persistent-activity-indicator: ${primary} !important;
+        --WDS-persistent-always-branded: ${primary} !important;
+        --WDS-persistent-always-branded-RGB: ${rgb(primary)} !important;
+
+        --WDS-green-400: ${primary} !important;
+        --WDS-green-500: ${primary} !important;
+        --WDS-emerald-400: ${green} !important;
+        --WDS-cool-gray-alpha-40: ${outline} !important;
+        --WDS-black-alpha-10: rgba(0, 0, 0, 0.10) !important;
+      }
+
+      html, body, #app, .app-wrapper, .landing-page {
+        background-color: ${bg} !important;
+        color: ${onSurface} !important;
+        color-scheme: ${isDark ? 'dark' : 'light'} !important;
+        accent-color: ${primary} !important;
+      }
+
+      .landing-page .btn,
+      .landing-page button,
+      .landing-page a.btn {
+        background-color: ${primary} !important;
+        color: ${onPrimary} !important;
+        border-color: ${primary} !important;
+      }
+
+      .landing-page .landing-title,
+      .landing-page .landing-subtitle,
+      .landing-page .text-tip,
+      .landing-page .browser-title {
+        color: ${onSurface} !important;
+      }
+
+      ::selection {
+        background-color: ${primContainer} !important;
+        color: ${onPrimContainer} !important;
+      }
+    `;
+  }
+
   function buildUniversalCSS(colors, isDark) {
     const bg = getHex(colors.background) || getHex(colors.surface) || (isDark ? '#130d0b' : '#fff8f6');
     const surfaceLow = getHex(colors.surfaceContainerLow) || (isDark ? '#1a110f' : '#f8edea');
@@ -753,9 +1053,16 @@
 
   function applyCaelestiaTheme(theme) {
     if (!theme || !theme.colours) return;
+    currentTheme = theme;
 
     const hostname = window.location.hostname.toLowerCase();
     const colors = theme.colours;
+    const siteId = getSiteId(hostname);
+
+    if (siteId && sitesEnabled[siteId] === false) {
+      removeInjectedStyle();
+      return;
+    }
 
     // Detect light vs dark mode from theme or system preference
     let isDark = true;
@@ -791,6 +1098,10 @@
       css = buildRedditCSS(colors, isDark);
     } else if (hostname.includes('wikipedia.org')) {
       css = buildWikipediaCSS(colors, isDark);
+    } else if (hostname === 'web.whatsapp.com') {
+      css = buildWhatsAppCSS(colors, isDark);
+    } else if (isGoogleHost(hostname)) {
+      css = buildGoogleCSS(colors, isDark);
     } else {
       css = buildUniversalCSS(colors, isDark);
     }
@@ -809,17 +1120,23 @@
 
   // 1. Initial load from chrome.storage
   try {
-    chrome.storage.local.get(['caelestia_theme'], (result) => {
+    chrome.storage.local.get(['caelestia_theme', 'caelestia_sites_enabled'], (result) => {
+      sitesEnabled = result.caelestia_sites_enabled || {};
       if (result.caelestia_theme) {
         applyCaelestiaTheme(result.caelestia_theme);
       }
     });
   } catch (e) {}
 
-  // 2. React dynamically whenever Caelestia theme / wallpaper / mode changes
+  // 2. React dynamically whenever the theme, wallpaper, mode, or site toggle changes
   try {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'local' && changes.caelestia_theme?.newValue) {
+      if (area !== 'local') return;
+      if (changes.caelestia_sites_enabled) {
+        sitesEnabled = changes.caelestia_sites_enabled.newValue || {};
+        if (currentTheme) applyCaelestiaTheme(currentTheme);
+      }
+      if (changes.caelestia_theme?.newValue) {
         applyCaelestiaTheme(changes.caelestia_theme.newValue);
       }
     });

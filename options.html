@@ -17,7 +17,7 @@
         </div>
         <div class="header-title-box">
           <h1>Caelestia-DNT Preferences</h1>
-          <span class="header-badge">v1.4.0</span>
+          <span class="header-badge">v1.5.0</span>
         </div>
       </div>
       <a href="newtab.html" class="btn secondary back-btn">
@@ -91,6 +91,32 @@
               </div>
             </label>
           </div>
+        </div>
+
+        <!-- Per-site theming (new adapters can be disabled if a site changes) -->
+        <div class="field-group">
+          <label>Website Theming</label>
+          <div class="toggle-row">
+            <div>
+              <strong>Google Search</strong>
+              <p>Themes google.com results, filters, links, and the search box.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="siteToggleGoogle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <strong>WhatsApp Web</strong>
+              <p>Themes web.whatsapp.com surfaces, text, and chat bubbles.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="siteToggleWhatsApp" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <span class="field-hint">Reload the site after changing this setting.</span>
         </div>
 
         <!-- Wallpaper Upload Box (revealed when Wallpaper Color Extractor is active) -->

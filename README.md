@@ -47,7 +47,7 @@ Caelestia-DNT: Dynamic New Tab
 - **Niri-friendly**: No compositor-specific hacks; works with Niri's tiling and gaps. Window fullscreen is still available through the browser.
 - **Zen / Focus Mode (<kbd>Z</kbd>)**: Opens by default in a clean, distraction-free view with a large clock, personalized greeting, and inspirational quotes.
 - **Integrated Quick Search (<kbd>S</kbd>)**: Instant floating search overlay with a search-engine dropdown (Google, Brave, DuckDuckGo, YouTube, Wikipedia).
-- **Curated website theming**: Injects your desktop palette into **YouTube**, **GitHub**, **Reddit**, and **Wikipedia**.
+- **Curated website theming**: Injects your desktop palette into **YouTube**, **GitHub**, **Reddit**, **Wikipedia**, **Google Search**, and **WhatsApp Web**.
 - **Optional browser chrome theme**: Generates a Thorium/Chromium theme so the tab strip, toolbar, and frame use the same palette.
 - **Dashboard tools**: Quick shortcuts grid, daily task checklist, and an auto-saving scratchpad.
 - **Dynamic motivational quotes**: Curated collection with instant clipboard copy (<kbd>C</kbd>) and random refresh (<kbd>R</kbd>).
@@ -218,6 +218,26 @@ Theme sources available in Preferences:
 - **Desktop Dynamic** — live Noctalia/Caelestia palette (default).
 - **Wallpaper Color Extractor** — upload any image and extract a palette in-browser.
 - **Designer Presets** — Caelestia Violet, Catppuccin Mocha, Tokyo Night, Nord Frost, Forest Matcha, Sunset Ember.
+
+### Supported websites
+
+| Site | What gets themed |
+|---|---|
+| YouTube | Backgrounds, masthead, guide, search box, text, buttons |
+| GitHub | Header, navigation, cards, code blocks, forms, text |
+| Reddit | Header, posts, cards, text, links |
+| Wikipedia | Content, navigation, links, tables |
+| Google Search | Results, links, snippets, filter tabs, search box, panels |
+| WhatsApp Web | Landing/login page, chat list, conversation, chat bubbles, composer |
+
+Google and WhatsApp adapters can be disabled individually under **Preferences → Website Theming** if a site update changes its markup. Existing four sites are always enabled.
+
+A few limitations:
+
+- Google Search already has its own light/dark setting. Caelestia-DNT layers the wallpaper palette on top of it.
+- WhatsApp Web is a complex app; a future WhatsApp redesign may require selector updates.
+- Canvas-based apps such as Google Docs, Sheets, Slides, and Figma cannot be fully themed with CSS.
+- Arbitrary sites are not themed automatically; each adapter is written and tested per site.
 
 ---
 
