@@ -6,12 +6,61 @@
   'use strict';
 
   const STYLE_ID = 'caelestia-dynamic-site-theme';
+  const ROOT_ATTRIBUTES = [
+    'data-color-mode',
+    'data-dark-theme',
+    'data-light-theme',
+    'data-theme',
+    'data-bs-theme'
+  ];
   let currentTheme = null;
   let sitesEnabled = {};
+  let tabThemeOverride; // undefined = follow site setting, true/false = tab override
+  let themeReady = false;
+  let tabStateReady = false;
+  let originalRootState = null;
+
+  function captureRootState() {
+    if (originalRootState) return;
+    const el = document.documentElement;
+    originalRootState = {
+      attributes: Object.fromEntries(ROOT_ATTRIBUTES.map((attr) => [attr, el.getAttribute(attr)])),
+      dark: el.classList.contains('dark'),
+      light: el.classList.contains('light')
+    };
+  }
+
+  function restoreRootState() {
+    if (!originalRootState) return;
+    const el = document.documentElement;
+    for (const attr of ROOT_ATTRIBUTES) {
+      const value = originalRootState.attributes[attr];
+      if (value === null) el.removeAttribute(attr);
+      else el.setAttribute(attr, value);
+    }
+    el.classList.toggle('dark', originalRootState.dark);
+    el.classList.toggle('light', originalRootState.light);
+    originalRootState = null;
+  }
 
   function removeInjectedStyle() {
     const existing = document.getElementById(STYLE_ID);
     if (existing) existing.remove();
+    restoreRootState();
+  }
+
+  function getCurrentSite() {
+    return globalThis.CaelestiaSites?.getByHostname(window.location.hostname.toLowerCase()) || null;
+  }
+
+  function isSiteThemeEnabled(site) {
+    if (tabThemeOverride !== undefined) return tabThemeOverride;
+    return site ? sitesEnabled[site.id] !== false : true;
+  }
+
+  function maybeApplyTheme() {
+    if (!themeReady || !tabStateReady || !currentTheme) return;
+    applyCaelestiaTheme(currentTheme);
   }
 
   function getHex(val) {
@@ -28,22 +77,6 @@
     if (!/^[0-9a-f]{6}$/i.test(full)) return '0, 0, 0';
     const num = parseInt(full, 16);
     return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
-  }
-
-  function isGoogleHost(hostname) {
-    return hostname === 'google.com'
-      || hostname.startsWith('www.google.')
-      || /^www\.google\.[a-z]{2,}(\.[a-z]{2,})?$/.test(hostname);
-  }
-
-  function getSiteId(hostname) {
-    if (hostname.endsWith('youtube.com')) return 'youtube';
-    if (hostname.endsWith('github.com')) return 'github';
-    if (hostname.endsWith('reddit.com')) return 'reddit';
-    if (hostname.endsWith('wikipedia.org')) return 'wikipedia';
-    if (hostname === 'web.whatsapp.com') return 'whatsapp';
-    if (isGoogleHost(hostname)) return 'google';
-    return null;
   }
 
   // Purely dynamic token resolution - all colors derived directly from wallpaper scheme
@@ -1055,11 +1088,11 @@
     if (!theme || !theme.colours) return;
     currentTheme = theme;
 
-    const hostname = window.location.hostname.toLowerCase();
+    const site = getCurrentSite();
+    const siteId = site?.id;
     const colors = theme.colours;
-    const siteId = getSiteId(hostname);
 
-    if (siteId && sitesEnabled[siteId] === false) {
+    if (!isSiteThemeEnabled(site)) {
       removeInjectedStyle();
       return;
     }
@@ -1075,6 +1108,7 @@
     }
 
     // Synchronize site root attributes for sites supporting theme modes
+    captureRootState();
     const modeStr = isDark ? 'dark' : 'light';
     document.documentElement.setAttribute('data-color-mode', modeStr);
     document.documentElement.setAttribute('data-dark-theme', modeStr);
@@ -1090,17 +1124,17 @@
     }
 
     let css = '';
-    if (hostname.includes('youtube.com')) {
+    if (siteId === 'youtube') {
       css = buildYouTubeCSS(colors, isDark);
-    } else if (hostname.includes('github.com')) {
+    } else if (siteId === 'github') {
       css = buildGitHubCSS(colors, isDark);
-    } else if (hostname.includes('reddit.com')) {
+    } else if (siteId === 'reddit') {
       css = buildRedditCSS(colors, isDark);
-    } else if (hostname.includes('wikipedia.org')) {
+    } else if (siteId === 'wikipedia') {
       css = buildWikipediaCSS(colors, isDark);
-    } else if (hostname === 'web.whatsapp.com') {
+    } else if (siteId === 'whatsapp') {
       css = buildWhatsAppCSS(colors, isDark);
-    } else if (isGoogleHost(hostname)) {
+    } else if (siteId === 'google') {
       css = buildGoogleCSS(colors, isDark);
     } else {
       css = buildUniversalCSS(colors, isDark);
@@ -1118,26 +1152,54 @@
     style.textContent = css;
   }
 
-  // 1. Initial load from chrome.storage
+  // 1. Load the theme snapshot and the current tab's per-tab override.
   try {
     chrome.storage.local.get(['caelestia_theme', 'caelestia_sites_enabled'], (result) => {
       sitesEnabled = result.caelestia_sites_enabled || {};
       if (result.caelestia_theme) {
-        applyCaelestiaTheme(result.caelestia_theme);
+        currentTheme = result.caelestia_theme;
       }
+      themeReady = true;
+      maybeApplyTheme();
     });
-  } catch (e) {}
+  } catch (e) {
+    themeReady = true;
+  }
 
-  // 2. React dynamically whenever the theme, wallpaper, mode, or site toggle changes
+  try {
+    chrome.runtime.sendMessage({ action: 'getTabThemeState' }, (state) => {
+      if (!chrome.runtime.lastError && state) {
+        tabThemeOverride = state.hasOverride ? state.override : undefined;
+      }
+      tabStateReady = true;
+      maybeApplyTheme();
+    });
+  } catch (e) {
+    tabStateReady = true;
+  }
+
+  // 2. React to theme/site-setting changes and per-tab toggle messages.
   try {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       if (changes.caelestia_sites_enabled) {
         sitesEnabled = changes.caelestia_sites_enabled.newValue || {};
-        if (currentTheme) applyCaelestiaTheme(currentTheme);
+        maybeApplyTheme();
       }
       if (changes.caelestia_theme?.newValue) {
-        applyCaelestiaTheme(changes.caelestia_theme.newValue);
+        currentTheme = changes.caelestia_theme.newValue;
+        themeReady = true;
+        maybeApplyTheme();
+      }
+    });
+  } catch (e) {}
+
+  try {
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg.action === 'tabThemeChanged') {
+        tabThemeOverride = msg.hasOverride ? msg.override : undefined;
+        tabStateReady = true;
+        maybeApplyTheme();
       }
     });
   } catch (e) {}

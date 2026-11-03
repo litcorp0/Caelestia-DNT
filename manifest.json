@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Caelestia-DNT",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Dynamic Material You new tab synchronized with Noctalia (Niri) and Caelestia (Hyprland) on Linux",
   "permissions": [
     "windows",
@@ -38,6 +38,15 @@
   "background": {
     "service_worker": "background.js"
   },
+  "action": {
+    "default_title": "Caelestia-DNT",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
@@ -59,6 +68,7 @@
         "*://web.whatsapp.com/*"
       ],
       "js": [
+        "sites.js",
         "content.js"
       ],
       "run_at": "document_start"
