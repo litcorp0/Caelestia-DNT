@@ -168,6 +168,39 @@
   if (currentSourceRadio) currentSourceRadio.checked = true;
   updateThemeSourceUI(savedThemeSource);
 
+  // --- 4b. Per-site theming toggles ---
+  const siteToggleGoogle = document.getElementById('siteToggleGoogle');
+  const siteToggleWhatsApp = document.getElementById('siteToggleWhatsApp');
+
+  function readSiteToggles() {
+    return {
+      google: siteToggleGoogle ? siteToggleGoogle.checked : true,
+      whatsapp: siteToggleWhatsApp ? siteToggleWhatsApp.checked : true
+    };
+  }
+
+  function saveSiteToggles(message) {
+    if (chrome?.storage?.local) {
+      chrome.storage.local.set({ caelestia_sites_enabled: readSiteToggles() }, () => void chrome.runtime.lastError);
+    }
+    if (message) showToast(message);
+  }
+
+  if (chrome?.storage?.local) {
+    chrome.storage.local.get(['caelestia_sites_enabled'], (result) => {
+      const enabled = result.caelestia_sites_enabled || {};
+      if (siteToggleGoogle) siteToggleGoogle.checked = enabled.google !== false;
+      if (siteToggleWhatsApp) siteToggleWhatsApp.checked = enabled.whatsapp !== false;
+    });
+  }
+
+  siteToggleGoogle?.addEventListener('change', () => {
+    saveSiteToggles(siteToggleGoogle.checked ? 'Google Search theming enabled' : 'Google Search theming disabled');
+  });
+  siteToggleWhatsApp?.addEventListener('change', () => {
+    saveSiteToggles(siteToggleWhatsApp.checked ? 'WhatsApp Web theming enabled' : 'WhatsApp Web theming disabled');
+  });
+
   // Restore saved preset active state
   const savedPreset = localStorage.getItem('caelestia_theme_preset') || 'caelestia-violet';
   presetBtns.forEach((btn) => {
