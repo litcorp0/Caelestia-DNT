@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caelestia-DNT</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="popup-header">
+    <img class="popup-logo" src="icons/icon48.png" alt="">
+    <div class="popup-heading">
+      <h1>Caelestia-DNT</h1>
+      <p id="siteLabel">Checking…</p>
+    </div>
+    <span id="statusPill" class="status-pill">—</span>
+  </header>
+
+  <main class="popup-body">
+    <div id="supportedView" hidden>
+      <div class="toggle-row">
+        <div class="toggle-copy">
+          <strong>Use wallpaper theme in this tab</strong>
+          <p id="modeHint">Reading tab state…</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="tabToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button type="button" id="btnReset" class="link-btn" hidden>Reset to site default</button>
+    </div>
+
+    <div id="unsupportedView" class="unsupported" hidden>
+      <p>This site isn’t supported yet.</p>
+      <p class="muted">Supported: YouTube, GitHub, Reddit, Wikipedia, Google Search, WhatsApp Web.</p>
+    </div>
+  </main>
+
+  <footer class="popup-footer">
+    <button type="button" id="btnOptions" class="link-btn">Open preferences</button>
+  </footer>
+
+  <script src="sites.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
