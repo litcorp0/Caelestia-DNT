@@ -47,6 +47,7 @@ Caelestia-DNT: Dynamic New Tab
 - **Niri-friendly**: No compositor-specific hacks; works with Niri's tiling and gaps. Window fullscreen is still available through the browser.
 - **Zen / Focus Mode (<kbd>Z</kbd>)**: Opens by default in a clean, distraction-free view with a large clock, personalized greeting, and inspirational quotes.
 - **Integrated Quick Search (<kbd>S</kbd>)**: Instant floating search overlay with a search-engine dropdown (Google, Brave, DuckDuckGo, YouTube, Wikipedia).
+- **Per-tab theming toggle**: Click the toolbar icon to switch the current tab between the wallpaper theme and the site's native look. A badge shows ON/OFF, and the override survives reloads until the tab is closed.
 - **Curated website theming**: Injects your desktop palette into **YouTube**, **GitHub**, **Reddit**, **Wikipedia**, **Google Search**, and **WhatsApp Web**.
 - **Optional browser chrome theme**: Generates a Thorium/Chromium theme so the tab strip, toolbar, and frame use the same palette.
 - **Dashboard tools**: Quick shortcuts grid, daily task checklist, and an auto-saving scratchpad.
@@ -95,6 +96,29 @@ Caelestia-DNT: Dynamic New Tab
 | <kbd>K</kbd> | **Toggle Hints Bar** | Show or collapse the bottom navigation hints |
 | <kbd>?</kbd> | **Welcome Tour** | Reopen the onboarding wizard |
 | <kbd>Esc</kbd> | **Dismiss / Return** | Close overlays, search, or return focus to the page |
+
+---
+
+## 🎯 Per-tab theming toggle
+
+The toolbar icon controls theming for the **current tab and current site**. Click it to open the popup:
+
+- **Themed** — the wallpaper palette is applied.
+- **Default** — the site's native look is used.
+- **Reset to site default** — removes the per-tab override and follows the global site setting again.
+
+The toolbar badge shows `ON` or `OFF`; it is empty on unsupported sites. The override is stored in session storage, survives page reloads and service-worker restarts, and is cleared when the tab is closed or the browser exits.
+
+Effective state:
+
+| Per-tab override | Global site setting | Result |
+|---|---|---|
+| none | on | Themed |
+| none | off | Default |
+| on | on or off | Themed |
+| off | on or off | Default |
+
+This is independent for each site in a tab: turning off theming on Google does not affect WhatsApp if you navigate that tab there.
 
 ---
 
@@ -211,7 +235,7 @@ Caelestia-DNT resolves colors dynamically at runtime:
 1. **Palette generation**: Noctalia (or Caelestia) extracts a Material 3 palette from the active wallpaper.
 2. **Template delivery**: Noctalia's template engine writes `noctalia-theme.json` with all semantic roles, plus `noctalia-wallpaper.jpg`.
 3. **Extension application**: `newtab.js` maps the tokens to CSS custom properties and the wallpaper; the service worker broadcasts the same snapshot to `content.js`.
-4. **Site injection**: `content.js` remaps the design tokens of YouTube, GitHub, Reddit, and Wikipedia without breaking their layouts.
+4. **Site injection**: `content.js` remaps the design tokens of YouTube, GitHub, Reddit, Wikipedia, Google Search, and WhatsApp Web without breaking their layouts.
 
 Theme sources available in Preferences:
 
